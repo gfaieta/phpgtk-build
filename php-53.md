@@ -3,7 +3,7 @@ PHP 5.3
 
 PHP build steps taken from [https://wiki.php.net/internals/windows/stepbystepbuild](https://wiki.php.net/internals/windows/stepbystepbuild)
 
-## PHP
+## PHP + php_cairo
 
 #### 00)
 Install Windows7 32bit
@@ -45,29 +45,16 @@ The deps directory in `C:\php-sdk\php53\vc9\x86` should contain all required lib
 (see [http://wiki.php.net/internals/windows/libs](http://wiki.php.net/internals/windows/libs)).
 
 #### 08)
-run in the windows-sdk-shell:
-
-    cd C:\php-sdk\php53\vc9\x86\php-5.3.15-src
-    buildconf
-    configure --with-gd --enable-cli --disable-zts --enable-cli-win32
-    nmake
-    nmake build-devel
+download php_cairo source (I used 
+[https://github.com/gtkforphp/cairo](https://github.com/gtkforphp/cairo) 
+commit: df45aa1418) and extract to `C:\php-sdk\php53\vc9\x86\php-5.3.15-src\ext` and rename 
+extracted directory to `cairo`
 
 #### 09)
-test the newly built PHP
-
-    cd C:\php-sdk\php53\vc9\x86\php-5.3.15-src\Release
-    php -v
-    php -m
-
-
-## php_cairo
-
-#### 10)
 extract `gtk+-bundle_2.24.10-20120208_win32.zip` in `c:\gtk` (download from 
 [http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.24/](http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.24/))
 
-#### 11)
+#### 10)
 Copy overwriting existing files:
 
     c:\gtk\include\cairo               to  C:\php-sdk\php53\vc9\x86\deps\include\cairo
@@ -87,40 +74,7 @@ copy the following files from `c:\gtk\lib\`  into  `C:\php-sdk\php53\vc9\x86\dep
     libfontconfig.dll.a
     libfreetype.dll.a
  
-#### 12)
-download php_cairo source (I used 
-[https://github.com/gtkforphp/cairo](https://github.com/gtkforphp/cairo) 
-commit: df45aa1418) and extract to `C:\php-sdk\php53\vc9\x86\` and rename 
-extracted directory to `cairo`
-
-`C:\php-sdk\php53\vc9\x86\` should now contain 3 subdirs: `cairo`, `deps` 
-and `php-5.3.15-src`
-
-#### 13)
-run in the windows-sdk-shell:
-
-    cd C:\php-sdk\php53\vc9\x86\cairo       
-    ..\php-5.3.15-src\Release\php-5.3.15-devel-VC9-x86\phpize.bat
-    configure --with-cairo
-
-#### 14)
-Open the generated Makefile (`C:\php-sdk\php53\vc9\x86\cairo\Makefile`)
-with a text-editor.  Find the first line beginning with `CFLAGS=` (should be at 
-line 49) and append the following definitions:
-
-    /D HAVE_FREETYPE=1 /D HAVE_WIN32_FONT=1 /D HAVE_CAIRO=1 /D HAVE_STRNLEN=1
-
-Find the second line beginning with `CFLAGS=` (should be at line 81) and
-delete the string (it's near the end of the line):
-
-    /D ZTS=1
-
-Then append:
-    
-    /I "C:\php-sdk\php53\vc9\x86\deps\include" /D HAVE_FREETYPE=1 /D HAVE_WIN32_FONT=1 /D HAVE_CAIRO=1 /D HAVE_STRNLEN=1
-    
-
-#### 15)
+#### 11)
 Open `C:\php-sdk\php53\vc9\x86\deps\include\fontconfig\fontconfig.h`
 with a text-editor. Find the line that says:
 
@@ -134,14 +88,17 @@ and replace with:
     # include <unistd.h>
     #endif    
 
-#### 16)
+#### 12)
 run in the windows-sdk-shell:
 
+    cd C:\php-sdk\php53\vc9\x86\php-5.3.15-src
+    buildconf
+    configure --with-gd --enable-cli --disable-zts --enable-cli-win32 --with-cairo=shared
     nmake
- 
-#### 17)
-copy `C:\php-sdk\php53\vc9\x86\cairo\Release\php_cairo.dll` to
-`C:\php-sdk\php53\vc9\x86\php-5.3.15-src\Release\ext\php_cairo.dll`
+
+#### 13)
+Copy `php_cairo.dll` from `C:\php-sdk\php53\vc9\x86\php-5.3.15-src\Release` to
+    `C:\php-sdk\php53\vc9\x86\php-5.3.15-src\Release\ext`
 
 copy the following files from `C:\gtk\bin` to `C:\php-sdk\php53\vc9\x86\php-5.3.15-src\Release`
 
@@ -153,38 +110,39 @@ copy the following files from `C:\gtk\bin` to `C:\php-sdk\php53\vc9\x86\php-5.3.
     zlib1.dll
        
 
-#### 18)
+#### 14)
 Create a `php.ini` in `C:\php-sdk\php53\vc9\x86\php-5.3.15-src\Release` with 
 the following content:
 
     extension_dir=.\ext
     extension=php_cairo.dll
-       
-#### 19)
-verify that the extension is loaded
+
+#### 15)
+test the newly built PHP
 
     cd C:\php-sdk\php53\vc9\x86\php-5.3.15-src\Release
+    php -v
     php -m
 
 
 ## php_gtk2
 
 
-#### 20)
+#### 16)
 get `grep` and `sed` for windows (for example: 
 [http://unxutils.sourceforge.net/UnxUtils.zip](http://unxutils.sourceforge.net/UnxUtils.zip))
 and put them in the `PATH` (ex. `c:\windows`)
 
-#### 21)
+#### 17)
 extract php-gtk sources to `c:\php-gtk` (I used 
 [https://github.com/auroraeosrose/php-gtk-src](https://github.com/auroraeosrose/php-gtk-src)
 commit: 4cda109cf9)
                 
-#### 22)
+#### 18)
 We need a `php.exe`, so add `C:\php-sdk\php53\vc9\x86\php-5.3.15-src\Release` to 
 `PATH` in `C:\Program Files\Microsoft Visual Studio 9.0\Common7\Tools\vsvars32.bat`
 
-#### 23)
+#### 19)
 In  `C:\Program Files\Microsoft Visual Studio 9.0\Common7\Tools\vsvars32.bat`
 
     add to INCLUDE  C:\php-sdk\php53\vc9\x86\php-5.3.15-src
@@ -192,15 +150,15 @@ In  `C:\Program Files\Microsoft Visual Studio 9.0\Common7\Tools\vsvars32.bat`
     add to LIB      C:\php-sdk\php53\vc9\x86\php-5.3.15-src\Release
     add to LIB      C:\php-sdk\php53\vc9\x86\deps\lib
 
-#### 24)
+#### 20)
     mkdir c:\php_build
 
-#### 25)
+#### 21)
 extract
 [http://www.php.net/extra/win32build.zip](http://www.php.net/extra/win32build.zip)
 into `c:\php_build`
                               
-#### 26)
+#### 22)
 copy from `c:\gtk` to `c:\php_build`
 
     include\cairo                     -> include\cairo
@@ -216,13 +174,13 @@ copy from `c:\gtk` to `c:\php_build`
 
 Overwrite conflicting files
 
-#### 27)
+#### 23)
 copy 
 
     c:\php_build\lib\glib-2.0\include\*   -> c:\php_build\include\*
     c:\php_build\lib\gtk-2.0\include\*    -> c:\php_build\include\*
 
-#### 28)
+#### 24)
 In  `C:\Program Files\Microsoft Visual Studio 9.0\Common7\Tools\vsvars32.bat`
 
     add to INCLUDE  C:\php_build\include
@@ -230,26 +188,22 @@ In  `C:\Program Files\Microsoft Visual Studio 9.0\Common7\Tools\vsvars32.bat`
 and execute the batch, in the windows sdk shell, to activate the changes
 
 
-#### 29) ***** HACK *****
+#### 25) ***** HACK *****
 copy `C:\Program Files\Microsoft SDKs\Windows\v6.1\Samples\winui\TSF\tsfapp\winres.h`
 to `c:\php_build\include`
 
-#### 30)
+#### 26)
 copy `php_cairo_api.h` and  `php_cairo.h` 
 from `C:\php-sdk\php53\vc9\x86\cairo` to `c:\php_build\include`
 
-#### 31)
-copy `php_cairo.dll.res`,  `php_cairo.exp` and `php_cairo.lib`
-from `C:\php-sdk\php53\vc9\x86\cairo\Release` to `c:\php_build\lib`
-
-#### 32)
+#### 27)
 run in the windows-sdk-shell:
 
-    buildconf --with-phpize=c:\php-sdk\php53\vc9\x86\php-5.3.15-src\Release\php-5.3.15-devel-VC9-x86\phpize.bat
+    buildconf
     configure --with-php-build=..\php_build --disable-zts --enable-gd
     nmake
 
-#### 33)
+#### 28)
 copy `C:\php-gtk\Release\php_gtk2.dll` to
 `C:\php-sdk\php53\vc9\x86\php-5.3.15-src\Release\ext\php_gtk2.dll`
 
@@ -271,12 +225,12 @@ to `C:\php-sdk\php53\vc9\x86\php-5.3.15-src\Release`
     libpangowin32-1.0-0.dll
     libatk-1.0-0.dll
 
-#### 34)
+#### 29)
 add the following line to `C:\php-sdk\php53\vc9\x86\php-5.3.15-src\Release\php.ini`
 
     extension=php_gtk2.dll 
 
-#### 35)
+#### 30)
 verify that the extension is loaded
 
     cd C:\php-sdk\php53\vc9\x86\php-5.3.15-src\Release
